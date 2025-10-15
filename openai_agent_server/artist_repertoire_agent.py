@@ -2,22 +2,22 @@ import textwrap
 import os
 from dotenv import load_dotenv
 import json
+import asyncio
 
-from acp_sdk import Metadata, Annotations
+from acp_sdk import Metadata, Annotations, Author, Capability
 from acp_sdk.models.platform import PlatformUIAnnotation, PlatformUIType, AgentToolInfo
 from acp_sdk.models import Message, MessagePart
 from acp_sdk.server import RunYield, RunYieldResume, Server, Context
 from collections.abc import AsyncGenerator
 from pydantic import BaseModel, Field
 from typing import List, Optional
-
-# OpenAI/OpenRouter LLM adapter
-from beeai_framework.adapters.openai import OpenAIChatModel
-from beeai_framework.backend import UserMessage, SystemMessage
+from agents import Agent, Runner, gen_trace_id, trace, set_default_openai_key, Prompt
+from agents.mcp import MCPServer, MCPServerSseParams, MCPServerSse
+from agents.model_settings import ModelSettings
+from agents.items import TResponseInputItem
 
 load_dotenv()
-if 'OPENAI_API_KEY' not in os.environ and 'OPENROUTER_KEY' in os.environ:
-        os.environ['OPENAI_API_KEY'] = os.environ['OPENROUTER_KEY']
+set_default_openai_key(os.environ.get("OPENAI_API_KEY", ""))
 
 server = Server()
 
@@ -46,10 +46,8 @@ class SongEvaluationOutput(BaseModel):
     name="artist-repertoire-agent",
     description="An A&R agent that evaluates songs for commercial potential and artistic merit.",
     metadata=Metadata(
-        version="1.0.0",
-        framework="BeeAI",
+        framework="OpenAI",
         programming_language="Python",
-        license="Apache 2.0",
         annotations=Annotations(
             beeai_ui=PlatformUIAnnotation(
                 ui_type=PlatformUIType.HANDSOFF,
@@ -58,36 +56,19 @@ class SongEvaluationOutput(BaseModel):
                 tools=[AgentToolInfo(name="WebSearch", description="Search the web for up-to-date information")]
             )
         ),
-        author={
-            "name": "Vanna Winland",
-            "email": "vanna.winland@ibm.com"
-        },
-        env=[
-            {
-                "name": "OPENROUTER_KEY",
-                "description": "Your OpenRouter API key",
-                "required": True
-            },
-            {
-                "name": "OPENROUTER_BASE_URL",
-                "description": "Base URL for OpenRouter API (https://openrouter.ai/api/v1)",
-                "required": True
-            },
-            {
-                "name": "MODEL_NAME",
-                "description": "Model name for OpenRouter (e.g., meta-llama/llama-4-scout:free)",
-                "required": True
-            }
-        ],
+        author=Author(
+            name= "",
+            email= ""
+        ),
         recommended_models=[
             "meta-llama/llama-4-scout:free",
             "openrouter/gpt-3.5-turbo",
             "openrouter/gpt-4-turbo"
         ],
         capabilities=[
-            {"name": "Song Evaluation", "description": "Assess commercial and artistic potential of songs"},
-            {"name": "Market Comparison", "description": "Compare songs to current hits and artists"},
-            {"name": "A&R Recommendation", "description": "Provide sign/pass/needs work recommendations"}
+            Capability(name="Song Evaluation", description="Assess commercial and artistic potential of songs"),
+            Capability(name="Market Comparison", description="Compare songs to current hits and artists"),
+            Capability(name="A&R Recommendation", description="Provide sign/pass/needs work recommendations")
         ],
         tags=["music", "A&R", "song-evaluation", "entertainment", "nlp"],
         documentation="""
@@ -111,12 +92,10 @@ Acts as an A&R Representative for a major record label, evaluating songs for hit
 """
     )
 )
+
 async def artist_repertoire_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYieldResume]:
     """Evaluates a song for commercial potential and artistic merit and saves the output."""
     user_prompt = input[-1].parts[0].content if input and input[-1].parts else ""
-    model_name = os.getenv("MODEL_NAME", "meta-llama/llama-4-scout:free")
-    llm = OpenAIChatModel(model_name)
-
     system_msg = textwrap.dedent("""
         You are an A&R Representative for a major record label. Your job is to evaluate songs for commercial potential and artistic merit.
 
@@ -131,11 +110,21 @@ async def artist_repertoire_agent(input: list[Message]) -> AsyncGenerator[RunYie
         Keep feedback concise and industry-focused. Think like someone who discovers the next big hit.
     """)
 
-    response = await llm.create_structure(
-        schema=SongEvaluationOutput,
-        messages=[SystemMessage(system_msg), UserMessage(user_prompt)],
+    model_name = os.getenv("MODEL_NAME", "gpt-4o-mini")
+    llm = Agent(
+        name="Music Expert",
+        instructions=system_msg,
+        # prompt=Prompt(user_prompt),
+        model=model_name,
+        model_settings=ModelSettings(temperature=0.95, top_p=0.95),
+        output_type=SongEvaluationOutput
     )
-    output = str(response.object)
+
+    response = await Runner.run(
+        starting_agent=llm,
+        input=str(user_prompt)
+        )
+    output = str(response.final_output)
     # Save the thoughtful response to a Markdown file
     with open("json_response.md", "w") as f:
         f.write(f"## Song Evaluation\n\n```json\n{output}\n```\n")

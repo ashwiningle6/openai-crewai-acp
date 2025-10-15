@@ -13,11 +13,9 @@ from crewai import LLM, Agent, Crew, Task
 from crewai.agents.parser import AgentAction, AgentFinish
 from pydantic import AnyUrl
 from dotenv import load_dotenv
-import agentops
 import os
  
 load_dotenv()
-agentops.init(api_key=os.getenv("AGENTOPS_API_KEY"))
 
 
 # ===========================
@@ -35,11 +33,11 @@ agentops.init(api_key=os.getenv("AGENTOPS_API_KEY"))
 
 # ----- Ollama LOCAL MODEL SETUP -----
 # To use Ollama, UNCOMMENT this block and ensure your .env file is configured.
-# llm = LLM(
-#     model=os.getenv("OLLAMA_MODEL"),
-#     base_url=os.getenv("OLLAMA_BASE_URL"),
-#     provider="ollama"
-# )
+llm = LLM(
+    model=os.getenv("OLLAMA_MODEL"),
+    base_url=os.getenv("OLLAMA_BASE_URL"),
+    provider="ollama"
+)
 
 
 server = Server()
