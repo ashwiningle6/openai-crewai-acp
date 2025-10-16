@@ -6,6 +6,8 @@ from acp_sdk import GenericEvent, Message, MessageCompletedEvent, MessagePartEve
 from acp_sdk.client import Client
 from acp_sdk.models import MessagePart
 
+from openai_agent_server.artist_repertoire_agent import SongEvaluationOutput
+
 
 async def run_client() -> None:
     # Step 1: Get URL and generate song lyrics from CrewAI agent (port 8000)
@@ -29,22 +31,21 @@ async def run_client() -> None:
 
     # Step 2: Send lyrics to OpenAI agent for critique (port 9000)
     async with Client(base_url="http://localhost:9000") as client_openai:
-        critique_parts = []
         song_message = Message(role="agent", parts=[MessagePart(content=song)])
         async for event in client_openai.run_stream(agent="artist-repertoire-agent", input=[song_message]):
             match event:
                 case MessagePartEvent(part=MessagePart(content=content)):
-                    critique_parts.append(content)
+                    critique_parts=content
                 case MessageCompletedEvent():
                     print()
-        critique = "\n".join(critique_parts).strip()
+        # critique = "\n".join(critique_parts).strip()
 
     # Step 3: Send song and A&R critique to markdown_report_agent (port 8000)
     async with Client(base_url="http://localhost:8000") as client_crew:
         markdown_parts = []
         payload = json.dumps({
             "song": song,
-            "feedback": critique
+            "feedback": critique_parts
         })
         critique_message = Message(role="agent", parts=[MessagePart(content=payload)])
         async for event in client_crew.run_stream(agent="markdown_report_agent", input=[critique_message]):

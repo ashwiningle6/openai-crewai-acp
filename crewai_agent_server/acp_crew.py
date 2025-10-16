@@ -76,13 +76,10 @@ def markdown_report_agent(input: list[Message], context: Context) -> Iterator:
     try:
         payload = input[-1].parts[0].content
         data = json.loads(payload) if isinstance(payload, str) else payload
-        print("DATA CHECK", data, type(data))
         song = data.get("song", "")
         feedback = data.get("feedback", {})
-        print("FEEDBACK CHECK", feedback, type(feedback))
         # if isinstance(feedback, str):
             # feedback = eval(feedback)
-        print("TRY COMPLETE")
     except Exception as e:
         yield MessagePart(content=f"Error parsing input: {e}")
         exit()

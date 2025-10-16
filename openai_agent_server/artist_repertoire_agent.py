@@ -112,11 +112,9 @@ async def artist_repertoire_agent(input: list[Message]) -> AsyncGenerator[RunYie
         starting_agent=llm,
         input=str(user_prompt)
         )
-    
-    output = response.final_output
-
+    output = str(response.final_output)
     print("OUTPUT", type(output))
-
+    
     # Save the thoughtful response to a Markdown file
     with open("json_response.md", "w") as f:
         f.write(f"## Song Evaluation\n\n```json\n{output}\n```\n")
