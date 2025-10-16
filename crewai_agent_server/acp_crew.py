@@ -1,9 +1,3 @@
-# Copyright 2025 © BeeAI a Series of LF Projects, LLC
-# Modified by Vanna Winland 2025
-# SPDX-License-Identifier: Apache-2.0
-
-
-
 from collections.abc import Iterator
 from typing import Any
 
@@ -14,39 +8,27 @@ from crewai.agents.parser import AgentAction, AgentFinish
 from pydantic import AnyUrl
 from dotenv import load_dotenv
 import os
- 
+import json
+    
 load_dotenv()
 
-
-# ===========================
-# CHOOSE YOUR LLM PROVIDER BELOW
-# ===========================
-
-# ----- IBM Watsonx.ai SETUP -----
-# To use IBM Watsonx.ai, UNCOMMENT this block and ensure your .env file is configured.
-# llm = LLM(
-#     model=os.getenv("WATSONX_MODEL"),
-#     base_url=os.getenv("WATSONX_URL"),
-#     api_key=os.getenv("WATSONX_APIKEY"),
-#     provider="watsonx"
-# )
-
-# ----- Ollama LOCAL MODEL SETUP -----
-# To use Ollama, UNCOMMENT this block and ensure your .env file is configured.
+# ----- OpenAI Cloud MODEL Setup -----
 llm = LLM(
-    model=os.getenv("OLLAMA_MODEL"),
-    base_url=os.getenv("OLLAMA_BASE_URL"),
-    provider="ollama"
+    model=os.environ.get("OPENAI_MODEL_NAME", "gpt-4o-mini"),
+    temperature=0.9,
+    top_p=0.9,
+    provider="openai",
+    stream=True,
+    seed=42
 )
 
-
+## Setup the ACP Server
 server = Server()
 
 
 @server.agent()
 def song_writer_agent(input: list[Message], context: Context) -> Iterator:
     """Agent that writes a song about a website. Accepts a message with URL"""
-
     try:
         url = str(AnyUrl(str(input[-1])))
     except ValueError:
@@ -58,8 +40,7 @@ def song_writer_agent(input: list[Message], context: Context) -> Iterator:
         role="Website Researcher",
         goal="Find useful content for songwriting from this text: Music is the art of arranging sounds.",
         backstory="Expert researcher who finds inspiring stories and themes online.",
-        verbose=True,
-        # tools=[ScrapeWebsiteTool()],  # REMOVE the tool for now
+        verbose=False,
     )
 
     song_writer = Agent(
@@ -67,7 +48,7 @@ def song_writer_agent(input: list[Message], context: Context) -> Iterator:
         role="Songwriter",
         goal="Create songs from research material.",
         backstory="Talented songwriter who transforms information into emotional, memorable songs.",
-        verbose=True,
+        verbose=False,
     )
 
     scrape_task = Task(
@@ -85,7 +66,7 @@ def song_writer_agent(input: list[Message], context: Context) -> Iterator:
     crew = Crew(
         agents=[website_scraper, song_writer],
         tasks=[scrape_task, write_song_task],
-        verbose=True,
+        verbose=False,
         step_callback=lambda event, *args, **kwargs: step_callback(event, context, *args, **kwargs),
     )
     result = crew.kickoff(inputs={"url": url})
@@ -94,8 +75,6 @@ def song_writer_agent(input: list[Message], context: Context) -> Iterator:
 @server.agent()
 def markdown_report_agent(input: list[Message], context: Context) -> Iterator:
     """Agent that formats the original song and A&R feedback JSON into a markdown report."""
-
-    import json
     try:
         payload = input[-1].parts[0].content
         data = json.loads(payload) if isinstance(payload, str) else payload

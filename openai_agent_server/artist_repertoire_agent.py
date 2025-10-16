@@ -17,7 +17,6 @@ from agents.model_settings import ModelSettings
 from agents.items import TResponseInputItem
 
 load_dotenv()
-set_default_openai_key(os.environ.get("OPENAI_API_KEY", ""))
 
 server = Server()
 
@@ -56,15 +55,6 @@ class SongEvaluationOutput(BaseModel):
                 tools=[AgentToolInfo(name="WebSearch", description="Search the web for up-to-date information")]
             )
         ),
-        author=Author(
-            name= "",
-            email= ""
-        ),
-        recommended_models=[
-            "meta-llama/llama-4-scout:free",
-            "openrouter/gpt-3.5-turbo",
-            "openrouter/gpt-4-turbo"
-        ],
         capabilities=[
             Capability(name="Song Evaluation", description="Assess commercial and artistic potential of songs"),
             Capability(name="Market Comparison", description="Compare songs to current hits and artists"),
@@ -74,7 +64,7 @@ class SongEvaluationOutput(BaseModel):
         documentation="""
 ### Artist & Repertoire Agent
 
-Acts as an A&R Representative for a major record label, evaluating songs for hit potential and artistic merit.
+Acts as an A&R Representative for a major record label, evaluating hit potential and artistic merit of songs.
 
 #### Features
 - Hit potential scoring (1-10)
@@ -116,7 +106,7 @@ async def artist_repertoire_agent(input: list[Message]) -> AsyncGenerator[RunYie
         instructions=system_msg,
         # prompt=Prompt(user_prompt),
         model=model_name,
-        model_settings=ModelSettings(temperature=0.95, top_p=0.95),
+        model_settings=ModelSettings(temperature=0.90, top_p=0.90),
         output_type=SongEvaluationOutput
     )
 

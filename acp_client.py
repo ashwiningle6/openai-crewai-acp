@@ -1,7 +1,3 @@
-# Copyright 2025 © BeeAI a Series of LF Projects, LLC
-# Modified by Vanna Winland 2025
-# SPDX-License-Identifier: Apache-2.0
-
 import asyncio
 import json
 import sys
@@ -14,7 +10,8 @@ from acp_sdk.models import MessagePart
 async def run_client() -> None:
     # Step 1: Get URL and generate song lyrics from CrewAI agent (port 8000)
     async with Client(base_url="http://localhost:8000") as client_crew:
-        user_message_input = Message(parts=[MessagePart(content=input("URL: "))])
+        user_message_input = Message(role="user", parts=[MessagePart(content=input("URL: "))])
+        print("user_message_input", user_message_input)
         song_parts = []
         async for event in client_crew.run_stream(agent="song_writer_agent", input=[user_message_input]):
             match event:
@@ -33,11 +30,12 @@ async def run_client() -> None:
                     print(f"ℹ️ {event.type}", file=sys.stderr)
         song = "\n".join(song_parts).strip()
 
-    # Step 2: Send lyrics to BeeAI agent for critique (port 9000)
-    async with Client(base_url="http://localhost:9000") as client_beeai:
+    # Step 2: Send lyrics to OpenAI agent for critique (port 9000)
+    async with Client(base_url="http://localhost:9000") as client_openai:
         critique_parts = []
-        song_message = Message(parts=[MessagePart(content=song)])
-        async for event in client_beeai.run_stream(agent="artist-repertoire-agent", input=[song_message]):
+        song_message = Message(role="agent", parts=[MessagePart(content=song)])
+        print("song_message", song_message)
+        async for event in client_openai.run_stream(agent="artist-repertoire-agent", input=[song_message]):
             match event:
                 case MessagePartEvent(part=MessagePart(content=content)):
                     print("\nA&R Critique:\n", content)
@@ -53,7 +51,8 @@ async def run_client() -> None:
             "song": song,
             "feedback": critique
         })
-        critique_message = Message(parts=[MessagePart(content=payload)])
+        critique_message = Message(role="agent", parts=[MessagePart(content=payload)])
+        print("critique_message", critique_message)
         async for event in client_crew.run_stream(agent="markdown_report_agent", input=[critique_message]):
             match event:
                 case MessagePartEvent(part=MessagePart(content=content)):
@@ -67,7 +66,6 @@ async def run_client() -> None:
     with open("a&r_feedback.md", "w") as f:
         f.write(markdown)
     print('\nA&R feedback saved to "a&r_feedback.md".')
-
 
 if __name__ == "__main__":
     asyncio.run(run_client())

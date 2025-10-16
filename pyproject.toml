@@ -1,32 +1,29 @@
 [project]
-name = "acp-client-server"
+name = "openai-crewai-acp"
 version = "0.1.0"
-requires-python = ">=3.12.10"
-
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
 dependencies = [
-    "acp-mcp>=0.4.2",
-    "acp-sdk>=1.0.3",
+    "acp-sdk==1.0.3",
     "aiohttp>=3.13.0",
     "beautifulsoup4>=4.14.2",
-    "beeai-framework>=0.1.0",
-    "crewai-tools[mcp]>=0.75.0",
-    "crewai[tools]>=0.201.1",
+    "crewai-tools[mcp]==0.75.0",
+    "crewai[tools]==0.201.1",
     "fastapi>=0.119.0",
-    "fastmcp>=2.12.4",
+    "fastmcp==2.12.4",
     "google-search-results>=2.4.2",
     "griffe>=1.14.0",
     "langchain>=0.3.27",
     "langchain-community>=0.3.31",
     "langchain-openai>=0.3.35",
     "langgraph>=0.6.10",
-    "langsmith>=0.4.35",
-    "linkup-sdk>=0.6.0",
-    "litellm>=1.74.9",
-    "mcp[cli]>=1.12.4",
+    "langsmith>=0.4.37",
+    "linkup-sdk==0.6.0",
+    "litellm==1.74.9",
+    "mcp[cli]==1.12.4",
     "mkdocs-material>=9.6.22",
     "openai-agents>=0.3.3",
-    "opentelemetry-exporter-otlp>=1.7.0",
-    "opentelemetry-sdk>=1.37.0",
     "pydantic>=2.12.2",
     "pydantic-ai>=1.1.0",
     "pydantic-core>=2.41.4",
@@ -35,12 +32,7 @@ dependencies = [
     "ruff>=0.14.0",
     "serpapi>=0.1.5",
     "telemetry>=2.0.8",
-    "tenacity>=8.2.3",
+    "tenacity==8.2.3",
     "uv>=0.9.3",
-    "uvicorn>=0.24.0",
-]
-
-[tool.uv.workspace]
-members = [
-    "openai_agent_server",
+    "uvicorn==0.35.0",
 ]
