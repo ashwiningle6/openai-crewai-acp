@@ -11,19 +11,16 @@ async def run_client() -> None:
     # Step 1: Get URL and generate song lyrics from CrewAI agent (port 8000)
     async with Client(base_url="http://localhost:8000") as client_crew:
         user_message_input = Message(role="user", parts=[MessagePart(content=input("URL: "))])
-        print("user_message_input", user_message_input)
         song_parts = []
         async for event in client_crew.run_stream(agent="song_writer_agent", input=[user_message_input]):
             match event:
                 case MessagePartEvent(part=MessagePart(content=content)):
-                    print(content)
                     song_parts.append(content)
                 case GenericEvent():
-                    print("\nℹ️ Agent Event:")
                     for key, value in event.generic.model_dump().items():
                         value = value.replace("\n", " ")
                         value = f"{value[:100]}..." if len(value) > 100 else value
-                        print(f"{key}: {value}")
+                        print("ℹ️ Agent", f"{key}: {value}")
                 case MessageCompletedEvent():
                     print()
                 case _:
@@ -34,11 +31,9 @@ async def run_client() -> None:
     async with Client(base_url="http://localhost:9000") as client_openai:
         critique_parts = []
         song_message = Message(role="agent", parts=[MessagePart(content=song)])
-        print("song_message", song_message)
         async for event in client_openai.run_stream(agent="artist-repertoire-agent", input=[song_message]):
             match event:
                 case MessagePartEvent(part=MessagePart(content=content)):
-                    print("\nA&R Critique:\n", content)
                     critique_parts.append(content)
                 case MessageCompletedEvent():
                     print()
@@ -52,7 +47,6 @@ async def run_client() -> None:
             "feedback": critique
         })
         critique_message = Message(role="agent", parts=[MessagePart(content=payload)])
-        print("critique_message", critique_message)
         async for event in client_crew.run_stream(agent="markdown_report_agent", input=[critique_message]):
             match event:
                 case MessagePartEvent(part=MessagePart(content=content)):

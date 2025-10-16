@@ -47,14 +47,14 @@ class SongEvaluationOutput(BaseModel):
     metadata=Metadata(
         framework="OpenAI",
         programming_language="Python",
-        annotations=Annotations(
-            beeai_ui=PlatformUIAnnotation(
-                ui_type=PlatformUIType.HANDSOFF,
-                display_name="Artist & Repertoire Agent",
-                user_greeting="Paste your song lyrics or description for A&R evaluation.",
-                tools=[AgentToolInfo(name="WebSearch", description="Search the web for up-to-date information")]
-            )
-        ),
+        # annotations=Annotations(
+        #     beeai_ui=PlatformUIAnnotation(
+        #         ui_type=PlatformUIType.HANDSOFF,
+        #         display_name="Artist & Repertoire Agent",
+        #         user_greeting="Paste your song lyrics or description for A&R evaluation.",
+        #         tools=[AgentToolInfo(name="WebSearch", description="Search the web for up-to-date information")]
+        #     )
+        # ),
         capabilities=[
             Capability(name="Song Evaluation", description="Assess commercial and artistic potential of songs"),
             Capability(name="Market Comparison", description="Compare songs to current hits and artists"),
@@ -62,9 +62,7 @@ class SongEvaluationOutput(BaseModel):
         ],
         tags=["music", "A&R", "song-evaluation", "entertainment", "nlp"],
         documentation="""
-### Artist & Repertoire Agent
-
-Acts as an A&R Representative for a major record label, evaluating hit potential and artistic merit of songs.
+### Artist & Repertoire Agent acts as an A&R Representative for a major record label, evaluating hit potential and artistic merit of songs.
 
 #### Features
 - Hit potential scoring (1-10)
@@ -114,7 +112,11 @@ async def artist_repertoire_agent(input: list[Message]) -> AsyncGenerator[RunYie
         starting_agent=llm,
         input=str(user_prompt)
         )
-    output = str(response.final_output)
+    
+    output = response.final_output
+
+    print("OUTPUT", type(output))
+
     # Save the thoughtful response to a Markdown file
     with open("json_response.md", "w") as f:
         f.write(f"## Song Evaluation\n\n```json\n{output}\n```\n")

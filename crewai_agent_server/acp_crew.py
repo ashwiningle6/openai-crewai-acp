@@ -17,9 +17,7 @@ llm = LLM(
     model=os.environ.get("OPENAI_MODEL_NAME", "gpt-4o-mini"),
     temperature=0.9,
     top_p=0.9,
-    provider="openai",
-    stream=True,
-    seed=42
+    stream=False,
 )
 
 ## Setup the ACP Server
@@ -78,13 +76,16 @@ def markdown_report_agent(input: list[Message], context: Context) -> Iterator:
     try:
         payload = input[-1].parts[0].content
         data = json.loads(payload) if isinstance(payload, str) else payload
+        print("DATA CHECK", data, type(data))
         song = data.get("song", "")
         feedback = data.get("feedback", {})
-        if isinstance(feedback, str):
-            feedback = eval(feedback)
+        print("FEEDBACK CHECK", feedback, type(feedback))
+        # if isinstance(feedback, str):
+            # feedback = eval(feedback)
+        print("TRY COMPLETE")
     except Exception as e:
         yield MessagePart(content=f"Error parsing input: {e}")
-        return
+        exit()
 
     md = [
         "## Generated Song",

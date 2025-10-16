@@ -1,5 +1,5 @@
 ## Song Evaluation
 
 ```json
-hit_potential_score=7 target_audience='Young adults aged 18-30 who enjoy pop and electronic music.' strengths='Catchy chorus, relatable lyrics about love and self-discovery, and polished production that appeals to mainstream listeners.' concerns='Lack of standout verses may make it forgettable; the theme feels slightly overdone in current pop trends.' market_comparison="Reminds me of Dua Lipa's 'Don't Start Now' and The Weeknd's 'Blinding Lights' for its upbeat vibe and production style." recommendation='Needs work.'
+hit_potential_score=7 target_audience='Young adults and tech-savvy listeners, especially those interested in emotional and introspective pop/rock.' strengths='Strong metaphors connecting technology and emotions, catchy chorus with a relatable theme about love and risk, good lyrical depth.' concerns='The tech references may alienate some listeners; the production must enhance the emotional weight to resonate broadly.' market_comparison='Reminiscent of artists like Hozier and Ed Sheeran, who blend emotional storytelling with modern sounds.' recommendation='Needs work'
 ```
