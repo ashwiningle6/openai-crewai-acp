@@ -82,10 +82,10 @@ class SongEvaluationOutput(BaseModel):
 )
 
 async def artist_repertoire_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYieldResume]:
-    """Evaluates a song for commercial potential and artistic merit and saves the output."""
+    """Evaluates commercial potential and artistic merit of a song and saves the output."""
     user_prompt = input[-1].parts[0].content if input and input[-1].parts else ""
     system_msg = textwrap.dedent("""
-        You are an A&R Representative for a major record label. Your job is to evaluate songs for commercial potential and artistic merit.
+        You are an A&R Representative for a major record label. Your job is to evaluate commercial potential and artistic merit of songs.
 
         Analyze the provided song and return:
         1. Hit Potential Score (1-10): How likely is this to succeed commercially?
@@ -112,9 +112,8 @@ async def artist_repertoire_agent(input: list[Message]) -> AsyncGenerator[RunYie
         starting_agent=llm,
         input=str(user_prompt)
         )
-    output = str(response.final_output)
-    print("OUTPUT", type(output))
-    
+    output = response.final_output
+
     # Save the thoughtful response to a Markdown file
     with open("json_response.md", "w") as f:
         f.write(f"## Song Evaluation\n\n```json\n{output}\n```\n")

@@ -31,17 +31,20 @@ async def run_client() -> None:
 
     # Step 2: Send lyrics to OpenAI agent for critique (port 9000)
     async with Client(base_url="http://localhost:9000") as client_openai:
+        content_list = []
         song_message = Message(role="agent", parts=[MessagePart(content=song)])
         async for event in client_openai.run_stream(agent="artist-repertoire-agent", input=[song_message]):
             match event:
                 case MessagePartEvent(part=MessagePart(content=content)):
-                    critique_parts=content
+                    content_list.append(content)
                 case MessageCompletedEvent():
-                    print()
+                    critique_parts: SongEvaluationOutput = message 
+                    print("MessageCompletedEvent", content)
         # critique = "\n".join(critique_parts).strip()
 
     # Step 3: Send song and A&R critique to markdown_report_agent (port 8000)
     async with Client(base_url="http://localhost:8000") as client_crew:
+        print("critique_parts", type(critique_parts), critique_parts)
         markdown_parts = []
         payload = json.dumps({
             "song": song,
